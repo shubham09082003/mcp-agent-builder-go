@@ -52,16 +52,28 @@ func deriveOAuthRedirectURI(r *http.Request) string {
 }
 
 // deriveOAuthRedirectURIFromEnv is deriveOAuthRedirectURI's PUBLIC_URL-only
-// half, for a caller with no *http.Request to fall back on (the
-// install_mcp_server agent tool). Empty means the caller should tell the
-// user to connect from the UI instead — the request-based fallback exists
-// specifically for local dev, which the tool path has no equivalent for.
+// half, for callers with no *http.Request to fall back on.
 func deriveOAuthRedirectURIFromEnv() string {
 	publicURL := os.Getenv("PUBLIC_URL")
 	if publicURL == "" {
 		return ""
 	}
 	return fmt.Sprintf("%s/api/oauth/callback", strings.TrimRight(publicURL, "/"))
+}
+
+// deriveOAuthRedirectURIFromBaseURL supports chat-driven OAuth starts. The
+// HTTP connector UI can derive a callback from the incoming request; an agent
+// tool call cannot, but the server still knows its loopback API URL in local
+// runs. PUBLIC_URL continues to win for hosted deployments.
+func deriveOAuthRedirectURIFromBaseURL(baseURL string) string {
+	if redirectURI := deriveOAuthRedirectURIFromEnv(); redirectURI != "" {
+		return redirectURI
+	}
+	baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
+	if baseURL == "" {
+		return ""
+	}
+	return fmt.Sprintf("%s/api/oauth/callback", baseURL)
 }
 
 // OAuthLoginRequest represents a request to start OAuth flow

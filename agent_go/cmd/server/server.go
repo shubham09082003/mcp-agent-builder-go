@@ -2597,6 +2597,8 @@ func runServer(cmd *cobra.Command, args []string) {
 		log.Fatalf("Failed to listen on %s:%d: %v", config.Host, config.Port, err)
 	}
 	actualPort := listener.Addr().(*net.TCPAddr).Port
+	config.Port = actualPort
+	api.config.Port = actualPort
 
 	// Dynamically serve runtime-config.js so the frontend learns the real ports.
 	// In packaged/desktop mode ports are dynamic (--port 0), so the static file's
@@ -10874,7 +10876,7 @@ func (api *StreamingAPI) registerMultiAgentMCPServerTools(registrar interface {
 			}
 
 			// OAuth: start the flow and hand back the URL for the user to open.
-			redirectURI := deriveOAuthRedirectURIFromEnv()
+			redirectURI := deriveOAuthRedirectURIFromBaseURL(api.GetAPIURL())
 			if redirectURI == "" {
 				return fmt.Sprintf("%q requires OAuth sign-in, and this server has no PUBLIC_URL configured to build a callback URL from chat. Ask the user to connect it from the connector directory in the UI instead.", name), nil
 			}
