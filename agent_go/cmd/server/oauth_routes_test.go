@@ -89,3 +89,23 @@ func TestDeriveOAuthRedirectURIUsesPublicURL(t *testing.T) {
 		t.Fatalf("deriveOAuthRedirectURI() = %q, want %q", got, want)
 	}
 }
+
+func TestDeriveOAuthRedirectURIFromBaseURLUsesLocalFallback(t *testing.T) {
+	t.Setenv("PUBLIC_URL", "")
+
+	got := deriveOAuthRedirectURIFromBaseURL("http://127.0.0.1:18743/")
+	want := "http://127.0.0.1:18743/api/oauth/callback"
+	if got != want {
+		t.Fatalf("deriveOAuthRedirectURIFromBaseURL() = %q, want %q", got, want)
+	}
+}
+
+func TestDeriveOAuthRedirectURIFromBaseURLPrefersPublicURL(t *testing.T) {
+	t.Setenv("PUBLIC_URL", "https://app.example/")
+
+	got := deriveOAuthRedirectURIFromBaseURL("http://127.0.0.1:18743")
+	want := "https://app.example/api/oauth/callback"
+	if got != want {
+		t.Fatalf("deriveOAuthRedirectURIFromBaseURL() = %q, want %q", got, want)
+	}
+}
